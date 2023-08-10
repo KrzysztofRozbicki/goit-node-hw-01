@@ -1,6 +1,12 @@
 import { Command } from 'commander';
 
-import { listContacts, getContactById, removeContact, addContact } from './contacts.js';
+import {
+  listContacts,
+  getContactById,
+  removeContact,
+  addContact,
+  retrieveContacts,
+} from './contacts.js';
 
 const program = new Command();
 
@@ -15,23 +21,29 @@ program.parse(process.argv);
 
 const argv = program.opts();
 
-const invokeAction = ({ action, id, name, email, phone }) => {
+const invokeAction = async ({ action, id, name, email, phone }) => {
+  const contacts = await listContacts();
+
   switch (action) {
     case 'list':
-      console.log(listContacts());
-
+      console.log(contacts);
       break;
 
     case 'get':
-      getContactById(id);
+      const index = await getContactById(id);
+      if (index) console.log(contacts[index]);
       break;
 
     case 'add':
-      addContact({ name, email, phone });
+      addContact(name, email, phone);
       break;
 
     case 'remove':
       removeContact(id);
+      break;
+
+    case 'backup':
+      retrieveContacts();
       break;
 
     default:
