@@ -26,6 +26,20 @@ const writeContactsFile = async (data, filePath) => {
   }
 };
 
+const validateIndex = (input, table) => {
+  if (isNaN(input)) {
+    console.log('It has to be a number!');
+
+    return false;
+  }
+  if (input < 0 || input >= table.length) {
+    console.log(`The number you chose is not index number`);
+
+    return false;
+  }
+  return true;
+};
+
 export const listContacts = async () => {
   try {
     const contacts = await readContactsFile(contactsPath);
@@ -185,8 +199,10 @@ export const retrieveContacts = async () => {
     let index = null;
     const backupFiles = await readdir(backupDir);
     console.table(backupFiles);
-    const indexAnswer = await question(`Choose the index of file you want to backup: `);
-    if (indexAnswer) {
+    let indexAnswer = await question(`Choose the index of file you want to backup: `);
+    if (!validateIndex(indexAnswer, backupFiles)) {
+      indexAnswer = await question(`Choose the index of file you want to backup: `);
+    } else {
       index = indexAnswer;
     }
     const selectedFilePath = path.join(backupDir, backupFiles[index]);

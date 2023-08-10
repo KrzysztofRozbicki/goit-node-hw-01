@@ -59,3 +59,17 @@ const invokeAction = async ({ action, id, name, email, phone }) => {
 };
 
 invokeAction(argv);
+
+const validateIndex = (input, table) => {
+  if (isNaN(value)) {
+    console.log('It has to be a number!');
+
+    return false;
+  }
+  if (value < 0 || value >= table.length) {
+    console.log(`The number you chose is not index number`);
+
+    return false;
+  }
+  return true;
+};
