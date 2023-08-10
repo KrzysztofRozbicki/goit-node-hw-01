@@ -7,16 +7,12 @@ import {
   addContact,
   retrieveContacts,
   editContact,
+  createBackup,
 } from './contacts.js';
 
 const program = new Command();
 
-program
-  .option('-a, --action <type>', 'choose action')
-  .option('-i, --id <type>', 'user id')
-  .option('-n, --name <type>', 'user name')
-  .option('-e, --email <type>', 'user email')
-  .option('-p, --phone <type>', 'user phone');
+program.option('-a, --action <type>', 'choose action').option('-i, --id <type>', 'user id');
 
 program.parse(process.argv);
 
@@ -35,7 +31,7 @@ const invokeAction = async ({ action, id, name, email, phone }) => {
         break;
 
       case 'add':
-        await addContact(name, email, phone);
+        await addContact();
         break;
 
       case 'remove':
@@ -48,6 +44,10 @@ const invokeAction = async ({ action, id, name, email, phone }) => {
 
       case 'backup':
         await retrieveContacts();
+        break;
+
+      case 'save':
+        await createBackup();
         break;
 
       default:

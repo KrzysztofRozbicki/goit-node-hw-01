@@ -1,14 +1,14 @@
 import * as path from 'path';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { nanoid } from 'nanoid';
 import * as readline from 'readline';
 
 const contactsPath = path.resolve('db', 'contacts.json');
-const backupContactsPath = path.resolve('backup', 'contacts.json');
+const backupDir = './backup';
 
-const readContactsFile = async () => {
+const readContactsFile = async path => {
   try {
-    const contactsJson = await readFile(contactsPath);
+    const contactsJson = await readFile(path);
     const contacts = JSON.parse(contactsJson);
     return contacts;
   } catch (err) {
@@ -17,9 +17,9 @@ const readContactsFile = async () => {
   }
 };
 
-const writeContactsFile = async data => {
+const writeContactsFile = async (data, filePath) => {
   try {
-    await writeFile(contactsPath, JSON.stringify(data, null, 2));
+    await writeFile(filePath, JSON.stringify(data, null, 2));
   } catch (err) {
     console.error('Error writing contacts to file: ', err);
     throw new Error(err);
@@ -28,7 +28,7 @@ const writeContactsFile = async data => {
 
 export const listContacts = async () => {
   try {
-    const contacts = await readContactsFile();
+    const contacts = await readContactsFile(contactsPath);
     if (contacts) return contacts;
     return false;
   } catch (err) {
@@ -58,7 +58,7 @@ export const removeContact = async contactId => {
     const index = contacts.findIndex(contact => contact.id === contactId);
     if (index && contacts) {
       contacts.splice(index, 1);
-      await writeContactsFile(contacts);
+      await writeContactsFile(contacts, contactsPath);
       console.log(new Date(), `Contact with id ${contactId} removed successfully`);
     }
   } catch (err) {
@@ -67,18 +67,44 @@ export const removeContact = async contactId => {
   }
 };
 
-export const addContact = async (name, email, phone) => {
+export const addContact = async () => {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  const question = prompt => {
+    return new Promise(resolve => {
+      rl.question(prompt, answer => {
+        resolve(answer);
+      });
+    });
+  };
   try {
     const contacts = await listContacts();
     if (contacts) {
       const newContact = {
         id: nanoid(),
-        name: name,
-        email: email,
-        phone: phone,
+        name: '',
+        email: '',
+        phone: '',
       };
+
+      const answerName = await question(`Enter the name: `);
+      if (answerName) {
+        newContact.name = answerName;
+      }
+
+      const answerEmail = await question(`Enter the e-mail: `);
+      if (answerEmail) {
+        newContact.email = answerEmail;
+      }
+
+      const answerPhone = await question(`Enter phone number: `);
+      if (answerPhone) {
+        newContact.phone = answerPhone;
+      }
       contacts.push(newContact);
-      await writeContactsFile(contacts);
+      await writeContactsFile(contacts, contactsPath);
       console.log(
         new Date(),
         `Contact ${newContact.name} with email: ${newContact.email} and phone: ${newContact.phone} added successfully`
@@ -87,6 +113,8 @@ export const addContact = async (name, email, phone) => {
   } catch (err) {
     console.log('Error adding new contact: ', err);
     throw new Error(err);
+  } finally {
+    rl.close();
   }
 };
 
@@ -131,7 +159,7 @@ export const editContact = async contactId => {
     }
     contacts[index] = editContact;
     console.log(new Date(), `The new Contact is ${JSON.stringify(contacts[index], null, 2)}`);
-    await writeContactsFile(contacts);
+    await writeContactsFile(contacts, contactsPath);
   } catch (error) {
     console.error('An error occurred: ', error);
   } finally {
@@ -140,11 +168,54 @@ export const editContact = async contactId => {
 };
 
 export const retrieveContacts = async () => {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  const question = prompt => {
+    return new Promise(resolve => {
+      rl.question(prompt, answer => {
+        resolve(answer);
+      });
+    });
+  };
   try {
-    const originalContacts = await readFile(backupContactsPath);
-    await writeFile(contactsPath, originalContacts);
-    console.log('The original contact list has been retrieved.');
+    let index = null;
+    const backupFiles = await readdir(backupDir);
+    console.table(backupFiles);
+    const indexAnswer = await question(`Choose the index of file you want to backup: `);
+    if (indexAnswer) {
+      index = indexAnswer;
+    }
+    const selectedFilePath = path.join(backupDir, backupFiles[index]);
+    const selectedFile = await readContactsFile(selectedFilePath);
+    await writeContactsFile(selectedFile, contactsPath);
+    console.log(`The backup contact list has been retrieved from  ${selectedFilePath}`);
   } catch (err) {
-    console.error('Error reseting contact list:', err);
+    console.error('Error retrieving contact list:', err);
+  } finally {
+    rl.close();
+  }
+};
+
+export const createBackup = async () => {
+  try {
+    const backupContacts = await listContacts();
+    const date = new Date();
+    const formattedDate = `${date.getUTCFullYear()}-${(date.getUTCMonth() + 1)
+      .toString()
+      .padStart(2, '0')}-${date.getUTCDate().toString().padStart(2, '0')}_${date
+      .getUTCHours()
+      .toString()
+      .padStart(2, '0')}-${date.getUTCMinutes().toString().padStart(2, '0')}-${date
+      .getUTCSeconds()
+      .toString()
+      .padStart(2, '0')}_UTC`;
+
+    const backupFileName = `backup_${formattedDate}.json`;
+    const backupPath = path.join('./backup', backupFileName);
+    await writeContactsFile(backupContacts, backupPath);
+  } catch (err) {
+    console.error('Error creating backup', err);
   }
 };
