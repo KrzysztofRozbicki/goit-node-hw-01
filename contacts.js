@@ -45,7 +45,7 @@ export const getContactById = async contactId => {
       console.log(`There is no contact with id ${contactId} !`);
       return false;
     }
-    console.log(contacts[index]);
+    console.log(new Date(), contacts[index]);
   } catch (err) {
     console.log(`Error getting contact with id ${contactId}: `, err);
     throw new Error(err);
@@ -59,7 +59,7 @@ export const removeContact = async contactId => {
     if (index && contacts) {
       contacts.splice(index, 1);
       await writeContactsFile(contacts);
-      console.log(`Contact with id ${contactId} removed successfully`);
+      console.log(new Date(), `Contact with id ${contactId} removed successfully`);
     }
   } catch (err) {
     console.log(`Error removing contact with id ${contactId}: `, err);
@@ -80,6 +80,7 @@ export const addContact = async (name, email, phone) => {
       contacts.push(newContact);
       await writeContactsFile(contacts);
       console.log(
+        new Date(),
         `Contact ${newContact.name} with email: ${newContact.email} and phone: ${newContact.phone} added successfully`
       );
     }
@@ -129,7 +130,7 @@ export const editContact = async contactId => {
       editContact.phone = answerPhone;
     }
     contacts[index] = editContact;
-    console.log(`The new Contact is ${JSON.stringify(contacts[index], null, 2)}`);
+    console.log(new Date(), `The new Contact is ${JSON.stringify(contacts[index], null, 2)}`);
     await writeContactsFile(contacts);
   } catch (error) {
     console.error('An error occurred: ', error);
@@ -142,7 +143,7 @@ export const retrieveContacts = async () => {
   try {
     const originalContacts = await readFile(backupContactsPath);
     await writeFile(contactsPath, originalContacts);
-    console.log('Backup of contact list retrieved.');
+    console.log('The original contact list has been retrieved.');
   } catch (err) {
     console.error('Error reseting contact list:', err);
   }
