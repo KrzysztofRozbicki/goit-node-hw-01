@@ -41,7 +41,7 @@ export const getContactById = async contactId => {
   try {
     const contacts = await listContacts();
     const index = contacts.findIndex(contact => contact.id === contactId);
-    if (index === -1 && contacts) {
+    if (index === -1 || !contacts) {
       console.log(`There is no contact with id ${contactId} !`);
       return false;
     }
@@ -56,11 +56,13 @@ export const removeContact = async contactId => {
   try {
     const contacts = await listContacts();
     const index = contacts.findIndex(contact => contact.id === contactId);
-    if (index && contacts) {
+    if (index !== -1 && contacts) {
       contacts.splice(index, 1);
       await writeContactsFile(contacts, contactsPath);
       console.log(new Date(), `Contact with id ${contactId} removed successfully`);
+      return;
     }
+    console.log(`There is no contact with id ${contactId}`);
   } catch (err) {
     console.log(`Error removing contact with id ${contactId}: `, err);
     throw new Error(err);
@@ -215,6 +217,7 @@ export const createBackup = async () => {
     const backupFileName = `backup_${formattedDate}.json`;
     const backupPath = path.join('./backup', backupFileName);
     await writeContactsFile(backupContacts, backupPath);
+    console.log(`The backup file ${backupPath} has been successfully created`);
   } catch (err) {
     console.error('Error creating backup', err);
   }
