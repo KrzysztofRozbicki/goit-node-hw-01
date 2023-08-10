@@ -1,4 +1,4 @@
-##Below is the list of printscreens showing results of the commands
+## Below is the list of printscreens showing results of the commands
 
 - **[list](https://ibb.co/XjgN14s)** `node index.js --action list`
 
