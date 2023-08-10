@@ -6,6 +6,7 @@ import {
   removeContact,
   addContact,
   retrieveContacts,
+  editContact,
 } from './contacts.js';
 
 const program = new Command();
@@ -20,34 +21,39 @@ program
 program.parse(process.argv);
 
 const argv = program.opts();
-
 const invokeAction = async ({ action, id, name, email, phone }) => {
-  const contacts = await listContacts();
+  try {
+    switch (action) {
+      case 'list':
+        const contacts = await listContacts();
+        console.log(contacts);
+        break;
 
-  switch (action) {
-    case 'list':
-      console.log(contacts);
-      break;
+      case 'get':
+        await getContactById(id);
+        break;
 
-    case 'get':
-      const index = await getContactById(id);
-      if (index) console.log(contacts[index]);
-      break;
+      case 'add':
+        await addContact(name, email, phone);
+        break;
 
-    case 'add':
-      addContact(name, email, phone);
-      break;
+      case 'remove':
+        await removeContact(id);
+        break;
 
-    case 'remove':
-      removeContact(id);
-      break;
+      case 'edit':
+        await editContact(id);
+        break;
 
-    case 'backup':
-      retrieveContacts();
-      break;
+      case 'backup':
+        await retrieveContacts();
+        break;
 
-    default:
-      console.warn(`\x1B[31m Unknown action type: ${action}`);
+      default:
+        console.warn(`\x1B[31m Unknown action type: ${action}`);
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
   }
 };
 
